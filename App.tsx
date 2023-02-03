@@ -1,20 +1,41 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaView, StyleSheet, View } from "react-native";
+import { LoginScreen } from "./src/screens/LogInScreen";
+import { useFonts } from "./src/hooks/useFonts";
+import React, { useState } from "react";
+import AppLoading from "expo-app-loading";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+	const [IsReady, SetIsReady] = useState(false);
+
+	const LoadFonts = async () => {
+		await useFonts();
+	};
+
+	if (!IsReady) {
+		return (
+			<AppLoading
+				startAsync={LoadFonts}
+				onFinish={() => SetIsReady(true)}
+				onError={() => {}}
+			/>
+		);
+	}
+
+	return (
+		<SafeAreaView style={styles.container}>
+			<LoginScreen />
+			<StatusBar style="auto" />
+		</SafeAreaView>
+	);
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+	container: {
+		flex: 1,
+		backgroundColor: "#fff",
+		// marginTop: 50,
+		marginLeft: 32,
+		marginRight: 31,
+	},
 });
