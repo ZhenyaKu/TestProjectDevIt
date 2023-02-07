@@ -10,25 +10,21 @@ import {
 	TouchableWithoutFeedback,
 	Keyboard,
 	Text,
-	TouchableOpacity,
-	Pressable,
 	ScrollView,
-	Platform,
 } from "react-native";
 import { useFormik } from "formik";
-import { ValidationSchema } from "./validationSchema";
-import { signUpScreenStyles } from "./styles";
-import { TextInput } from "../../components/TextInput";
-import { ArrowIcon, LogoIcon } from "../../components/Icons";
-import { VerificationCodeInput } from "../../components/VerificationCodeInput";
+import * as SQLite from "expo-sqlite";
 import PhoneInput from "react-native-phone-number-input";
-import { formatPhoneNumber } from "./formatPhoneNumber";
-import { AppRouteNames, AppStackParams } from "../../navigators/types";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { AppRouteNames, AppStackParams } from "../../navigators/types";
+import { VerificationCodeInput } from "../../components/VerificationCodeInput";
 import { AppLayout } from "../../components/AppLayout";
 import { BigBottomButton } from "../../components/BigBottomButton";
 import { TextLinkButton } from "../../components/TextLinkButton";
-import * as SQLite from "expo-sqlite";
+import { ValidationSchema } from "./validationSchema";
+import { formatPhoneNumber } from "./formatPhoneNumber";
+import { signUpScreenStyles } from "./styles";
+import { TextInput } from "../../components/TextInput";
 
 export const SignUpScreen = () => {
 	const db = SQLite.openDatabase("MainDB");
@@ -54,7 +50,7 @@ export const SignUpScreen = () => {
 		try {
 			db.transaction((tx) => {
 				tx.executeSql("SELECT Email FROM Users", [], (tx, results) => {
-					var len = results.rows.length;
+					let len = results.rows.length;
 					if (len > 0) {
 						let userEmail = results.rows.item(0).Email;
 						setEmail(userEmail);
@@ -119,6 +115,7 @@ export const SignUpScreen = () => {
 	const hasErrorConfirmPassword =
 		touched.confirmPassword && !!errors.confirmPassword;
 	const hasErrorName = touched.name && !!errors.name;
+	const hasErrorCode = touched.code && !!errors.code;
 
 	return (
 		<ScrollView>
@@ -173,9 +170,11 @@ export const SignUpScreen = () => {
 								autoFocus: true,
 								onEndEditing: () => console.log(values.code),
 							}}
-							//   touchableOpacityStyle={
-							//     hasError || errorMessage ? styles.inputError : {}
-							//   }
+							touchableOpacityStyle={
+								hasErrorCode
+									? signUpScreenStyles.inputError
+									: {}
+							}
 						/>
 
 						<TextInput

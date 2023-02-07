@@ -50,4 +50,7 @@ export const signUpScreenStyles = StyleSheet.create({
 		borderRadius: 15,
 		width: normalize(70),
 	},
+	inputError: {
+		borderColor: "red",
+	},
 });
