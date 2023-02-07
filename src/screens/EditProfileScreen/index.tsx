@@ -10,22 +10,18 @@ import {
 	Alert,
 } from "react-native";
 import { useFormik } from "formik";
-import { ValidationSchema } from "./validationSchema";
-import { editProfileScreenStyles } from "./styles";
-import { TextInput } from "../../components/TextInput";
-import { EditPhotoIcon } from "../../components/Icons";
-import {
-	ImageLibraryOptions,
-	ImagePickerResponse,
-	launchImageLibrary,
-} from "react-native-image-picker";
-import { AppLayout } from "../../components/AppLayout";
-import { BigBottomButton } from "../../components/BigBottomButton";
-import * as SQLite from "expo-sqlite";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AppRouteNames, AppStackParams } from "../../navigators/types";
+import * as ImagePicker from "expo-image-picker";
+import * as SQLite from "expo-sqlite";
+import { TextInput } from "../../components/TextInput";
+import { EditPhotoIcon } from "../../components/Icons";
+import { AppLayout } from "../../components/AppLayout";
+import { BigBottomButton } from "../../components/BigBottomButton";
+import { ValidationSchema } from "./validationSchema";
+import { editProfileScreenStyles } from "./styles";
 
-const avatarPlaceholder = require("../../../assets/icon.png");
+const avatarPlaceholder = require("../../../assets/Photo.png");
 
 export const EditProfileScreen = () => {
 	const db = SQLite.openDatabase("MainDB");
@@ -34,6 +30,7 @@ export const EditProfileScreen = () => {
 	const [phone, setPhone] = useState("");
 	const [position, setPosition] = useState("");
 	const [skype, setSkype] = useState("");
+	const [image, setImage] = useState("");
 	const navigation = useNavigation<NavigationProp<AppStackParams>>();
 
 	const toLogInScreen = useCallback(() => {
@@ -44,22 +41,19 @@ export const EditProfileScreen = () => {
 		getData();
 	}, []);
 
-	const chooseImage = async () => {
-		let options: ImageLibraryOptions = {
-			selectionLimit: 1,
-			mediaType: "photo",
-			includeBase64: true,
-		};
-
-		await launchImageLibrary(options, (response: ImagePickerResponse) => {
-			if (response.errorMessage) {
-				Alert.alert("Upload failed. Please try again.");
-			} else {
-				response.assets?.map((asset) =>
-					console.log(asset as unknown as File)
-				);
-			}
+	const pickImage = async () => {
+		let result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.All,
+			allowsEditing: true,
+			aspect: [4, 3],
+			quality: 1,
 		});
+
+		console.log(result);
+
+		if (!result.canceled) {
+			setImage(result.assets[0].uri);
+		}
 	};
 
 	const getData = () => {
@@ -69,7 +63,7 @@ export const EditProfileScreen = () => {
 					"SELECT Name, Phone, Email, Position, Skype FROM Users",
 					[],
 					(tx, results) => {
-						var len = results.rows.length;
+						let len = results.rows.length;
 						if (len > 0) {
 							let userName = results.rows.item(0).Name;
 							let userPhone = results.rows.item(0).Phone;
@@ -144,13 +138,19 @@ export const EditProfileScreen = () => {
 				>
 					<View style={editProfileScreenStyles.avatarRow}>
 						<TouchableOpacity
-							onPress={chooseImage}
+							onPress={pickImage}
 							style={editProfileScreenStyles.avatarRow}
 						>
-							<Image
+							{image && (
+								<Image
+									source={{ uri: image }}
+									style={editProfileScreenStyles.avatar}
+								/>
+							)}
+							{/* <Image
 								source={avatarPlaceholder}
 								style={editProfileScreenStyles.avatar}
-							/>
+							/> */}
 							<EditPhotoIcon
 								style={editProfileScreenStyles.editPhotoIcon}
 							/>
