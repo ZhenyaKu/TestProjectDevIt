@@ -1,23 +1,61 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	View,
 	TouchableWithoutFeedback,
 	Keyboard,
-	SafeAreaView,
 	Text,
 	TouchableOpacity,
-	Pressable,
+	Platform,
+	Alert,
 } from "react-native";
 import { useFormik } from "formik";
 import { ValidationSchema } from "./validationSchema";
 import { logInScreenStyles } from "./styles";
 import { TextInput } from "../../components/TextInput";
-import { EyeCloseIcon, LogoIcon } from "../../components/Icons";
-// import { useRefreshOnFocus } from "hooks/use-refresh-on-focus";
-import { EyeOpenIcon } from "../../components/Icons/index";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { AppRouteNames, AppStackParams } from "../../navigators/types";
+import { BigBottomButton } from "../../components/BigBottomButton";
+import { AppLayout } from "../../components/AppLayout";
+import { TextLinkButton } from "../../components/TextLinkButton";
+import * as SQLite from "expo-sqlite";
 
 export const LoginScreen = () => {
-	const [passwordVisible, setPasswordVisible] = useState(false);
+	const db = SQLite.openDatabase("MainDB");
+	const navigation = useNavigation<NavigationProp<AppStackParams>>();
+
+	useEffect(() => {
+		createTable();
+		getData();
+	}, []);
+
+	const createTable = () => {
+		db.transaction((tx: any) => {
+			tx.executeSql(
+				"CREATE TABLE IF NOT EXISTS " +
+					"Users " +
+					"(ID INTEGER PRIMARY KEY AUTOINCREMENT, Email VARCHAR, Password VARCHAR, Phone VARCHAR, Position VARCHAR, Skype VARCHAR)"
+			);
+		});
+	};
+	const getData = () => {
+		try {
+			db.transaction((tx) => {
+				tx.executeSql(
+					"SELECT Email, Password FROM Users",
+					[],
+					(tx, results) => {
+						let len = results.rows.length;
+						if (len > 0) {
+							toSignUpScreen();
+						}
+					}
+				);
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	const { handleChange, handleSubmit, values, isValid, errors, touched } =
 		useFormik({
 			validationSchema: ValidationSchema,
@@ -25,42 +63,39 @@ export const LoginScreen = () => {
 				email: "",
 				password: "",
 			},
-			onSubmit: () => {
-				console.log("save");
+			onSubmit: async ({ email, password }) => {
+				if (email.length == 0 || password.length == 0) {
+					Alert.alert("Warning!", "Please write your data.");
+				} else {
+					try {
+						await db.transaction(async (tx) => {
+							await tx.executeSql(
+								"INSERT INTO Users (Email, Password) VALUES (?,?)",
+								[email, password]
+							);
+						});
+						navigation.navigate(AppRouteNames.EditProfileScreen);
+					} catch (error) {
+						console.log(error);
+					}
+				}
 			},
 		});
 
-	const handleClickShowPassword = () => {
-		setPasswordVisible((prev) => !prev);
-	};
+	const toSignUpScreen = useCallback(() => {
+		navigation.navigate(AppRouteNames.SignUpScreen);
+	}, [navigation]);
 
 	const hasErrorEmail = touched.email && !!errors.email;
 	const hasErrorPassword = touched.password && !!errors.password;
 
 	return (
-		<View style={{ flex: 1, marginTop: 50 }}>
-			<LogoIcon style={{ alignSelf: "center" }} />
-			<Text
-				style={{
-					marginTop: 110,
-					fontFamily: "Poppins-Medium",
-					fontSize: 24,
-					lineHeight: 36,
-					alignSelf: "center",
-					color: "#1F1D1D",
-				}}
-			>
-				Log in to woorkroom
-			</Text>
+		<AppLayout title="Log in to woorkroom">
 			<TouchableWithoutFeedback
 				onPress={() => Keyboard.dismiss()}
 				accessible={false}
 			>
-				<View
-					style={{
-						marginTop: 50,
-					}}
-				>
+				<View style={logInScreenStyles.inputContainer}>
 					<TextInput
 						title="Your Email"
 						placeholder="Enter your email"
@@ -74,99 +109,45 @@ export const LoginScreen = () => {
 						autoCapitalize="none"
 						keyboardType="email-address"
 					/>
-					<View style={{ flexDirection: "row", flexWrap: "nowrap" }}>
-						<TextInput
-							title="Password"
-							placeholder="Enter your password"
-							editable
-							autoCorrect={false}
-							spellCheck={false}
-							value={values.password}
-							onChangeText={handleChange("password")}
-							errorText={errors.password}
-							hasError={hasErrorPassword}
-							autoCapitalize="none"
-							secureTextEntry={passwordVisible}
-						/>
-						<Pressable
-							onPress={handleClickShowPassword}
-							style={{
-								position: "absolute",
-								right: 2,
-								bottom: 32,
-							}}
-						>
-							{passwordVisible ? (
-								<EyeCloseIcon />
-							) : (
-								<EyeOpenIcon />
-							)}
-						</Pressable>
-					</View>
+
+					<TextInput
+						title="Password"
+						isPassword
+						placeholder="Enter your password"
+						editable
+						autoCorrect={false}
+						spellCheck={false}
+						value={values.password}
+						onChangeText={handleChange("password")}
+						errorText={errors.password}
+						hasError={hasErrorPassword}
+						autoCapitalize="none"
+					/>
 				</View>
 			</TouchableWithoutFeedback>
-			<TouchableOpacity onPress={() => console.log("press")}>
-				<Text
-					style={{
-						fontFamily: "Poppins-Regular",
-						fontSize: 14,
-						lineHeight: 21,
-						alignSelf: "flex-end",
-						color: "#9795A4",
-					}}
-				>
+			<TouchableOpacity
+				onPress={() =>
+					Alert.alert("Warning!", "Please, check your email?!")
+				}
+			>
+				<Text style={logInScreenStyles.forgotPasswordBtn}>
 					Forgot password?
 				</Text>
 			</TouchableOpacity>
-			<TouchableOpacity
-				style={logInScreenStyles.button}
-				onPress={() => console.log("press")}
-			>
-				<Text
-					style={{
-						fontFamily: "Poppins-Medium",
-						fontSize: 18,
-						lineHeight: 27,
-						alignSelf: "center",
-						color: "#1F1D1D",
-					}}
+			<View style={logInScreenStyles.btnContainer}>
+				<BigBottomButton
+					disabled={!isValid}
+					onPress={() => handleSubmit()}
 				>
 					Log in
-				</Text>
-			</TouchableOpacity>
-			<View
-				style={{
-					flexDirection: "row",
-					alignSelf: "center",
-					marginTop: 35,
-				}}
-			>
-				<TouchableOpacity onPress={() => console.log("press")}>
-					<Text
-						style={{
-							fontFamily: "Poppins-Regular",
-							fontSize: 14,
-							lineHeight: 21,
-							color: "#9795A4",
-							paddingRight: 5,
-						}}
-					>
-						New User?
-					</Text>
-				</TouchableOpacity>
-				<TouchableOpacity onPress={() => console.log("press")}>
-					<Text
-						style={{
-							fontFamily: "Poppins-Regular",
-							fontSize: 14,
-							lineHeight: 21,
-							color: "#FFC612",
-						}}
-					>
-						Create Account
-					</Text>
-				</TouchableOpacity>
+				</BigBottomButton>
+				<TextLinkButton
+					leftDescription="New User?"
+					onPress={toSignUpScreen}
+				>
+					Create Account
+				</TextLinkButton>
 			</View>
-		</View>
+		</AppLayout>
 	);
 };

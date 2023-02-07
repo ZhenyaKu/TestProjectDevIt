@@ -1,41 +1,61 @@
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 import { LoginScreen } from "./src/screens/LogInScreen";
-import { useFonts } from "./src/hooks/useFonts";
-import React, { useState } from "react";
-import AppLoading from "expo-app-loading";
+import React, { useCallback, useState } from "react";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SignUpScreen } from "./src/screens/SignUpScreen";
+import { EditProfileScreen } from "./src/screens/EditProfileScreen";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-	const [IsReady, SetIsReady] = useState(false);
+	const [fontsLoaded] = useFonts({
+		"Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
+		"Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
+	});
 
-	const LoadFonts = async () => {
-		await useFonts();
-	};
+	const onLayoutRootView = useCallback(async () => {
+		if (fontsLoaded) {
+			await SplashScreen.hideAsync();
+		}
+	}, [fontsLoaded]);
 
-	if (!IsReady) {
-		return (
-			<AppLoading
-				startAsync={LoadFonts}
-				onFinish={() => SetIsReady(true)}
-				onError={() => {}}
-			/>
-		);
+	if (!fontsLoaded) {
+		return null;
 	}
 
 	return (
-		<SafeAreaView style={styles.container}>
-			<LoginScreen />
+		<SafeAreaProvider onLayout={onLayoutRootView}>
 			<StatusBar style="auto" />
-		</SafeAreaView>
+			<NavigationContainer theme={MyTheme}>
+				<Stack.Navigator
+					screenOptions={{
+						headerShown: false,
+					}}
+				>
+					<Stack.Screen name="LogInScreen" component={LoginScreen} />
+					<Stack.Screen
+						name="SignUpScreen"
+						component={SignUpScreen}
+					/>
+					<Stack.Screen
+						name="EditProfileScreen"
+						component={EditProfileScreen}
+					/>
+				</Stack.Navigator>
+			</NavigationContainer>
+		</SafeAreaProvider>
 	);
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#fff",
-		// marginTop: 50,
-		marginLeft: 32,
-		marginRight: 31,
+const MyTheme = {
+	...DefaultTheme,
+	colors: {
+		...DefaultTheme.colors,
+		background: "#fff",
 	},
-});
+};

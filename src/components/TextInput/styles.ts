@@ -1,9 +1,9 @@
 import { StyleSheet } from "react-native";
 import normalize from "react-native-normalize";
 
-export default StyleSheet.create({
+export const textInputStyles = StyleSheet.create({
 	container: {
-		marginBottom: normalize(20),
+		marginVertical: normalize(20),
 		alignSelf: "stretch",
 		width: "100%",
 	},
