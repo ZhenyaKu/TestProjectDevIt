@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+	useCallback,
+	useContext,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	View,
 	TouchableWithoutFeedback,
@@ -42,9 +48,9 @@ export const SignUpScreen = () => {
 
 				[name, email, password, formattedPhone]
 			);
-			tx.executeSql("SELECT * from Users", [], (_: any, { rows }: any) =>
-				console.log(JSON.stringify(rows))
-			);
+			// tx.executeSql("SELECT * from Users", [], (_: any, { rows }: any) =>
+			// 	console.log(JSON.stringify(rows))
+			// );
 		});
 		toEditProfileScreen();
 	};
@@ -74,7 +80,7 @@ export const SignUpScreen = () => {
 			setShowValidationError(!checkValid || false);
 
 			if (checkValid) {
-				createProfile({ name, email, password, formattedPhone });
+				createProfile({ name, email, password });
 			}
 		},
 	});
@@ -107,13 +113,16 @@ export const SignUpScreen = () => {
 								ref={phoneInput}
 								value={phone}
 								layout="second"
-								textInputProps={{ value: phone, maxLength: 12 }}
+								textInputProps={{
+									value: phone,
+									maxLength: 12,
+								}}
 								defaultCode="US"
 								onChangeText={(text) => {
 									setPhone(formatPhoneNumber(text));
 								}}
 								onChangeFormattedText={(text) => {
-									setFormattedPhone(text);
+									setFormattedPhone(formatPhoneNumber(text));
 								}}
 								autoFocus
 								containerStyle={

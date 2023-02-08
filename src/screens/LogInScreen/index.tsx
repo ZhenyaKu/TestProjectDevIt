@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
 	View,
 	TouchableWithoutFeedback,
@@ -16,6 +16,7 @@ import { AppRouteNames, AppStackParams } from "../../navigators/types";
 import { BigBottomButton } from "../../components/BigBottomButton";
 import { AppLayout } from "../../components/AppLayout";
 import { TextLinkButton } from "../../components/TextLinkButton";
+import { AppContext } from "../../components/AppContext";
 import * as SQLite from "expo-sqlite";
 
 export const LoginScreen = () => {
@@ -28,6 +29,7 @@ export const LoginScreen = () => {
 	const toEditProfileScreen = useCallback(() => {
 		navigation.navigate(AppRouteNames.EditProfileScreen);
 	}, [navigation]);
+	const { setCurrentEmail } = useContext(AppContext);
 
 	useEffect(() => {
 		createTable();
@@ -54,11 +56,12 @@ export const LoginScreen = () => {
 				try {
 					db.transaction((tx) => {
 						tx.executeSql(
-							"SELECT * FROM Users WHERE email = $1 AND password = $2",
+							"SELECT * FROM Users WHERE email = $1 AND password = $2 LIMIT 1",
 							[email, password],
 							(tx, results) => {
 								let len = results.rows.length;
 								if (len > 0) {
+									setCurrentEmail(email);
 									toEditProfileScreen();
 								} else {
 									Alert.alert(
