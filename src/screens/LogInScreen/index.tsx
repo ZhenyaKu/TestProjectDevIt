@@ -20,7 +20,7 @@ import { AppContext } from "../../components/AppContext";
 import * as SQLite from "expo-sqlite";
 
 export const LoginScreen = () => {
-	const db = SQLite.openDatabase("MainDB");
+	const db = SQLite.openDatabase("db.db");
 	const navigation = useNavigation<NavigationProp<AppStackParams>>();
 
 	const toSignUpScreen = useCallback(() => {

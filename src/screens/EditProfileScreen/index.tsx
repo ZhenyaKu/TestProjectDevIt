@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useContext } from "react";
 import {
 	View,
 	TouchableWithoutFeedback,
@@ -20,17 +20,20 @@ import { AppLayout } from "../../components/AppLayout";
 import { BigBottomButton } from "../../components/BigBottomButton";
 import { ValidationSchema } from "./validationSchema";
 import { editProfileScreenStyles } from "./styles";
+import { AppContext } from "../../components/AppContext";
 
 const avatarPlaceholder = require("../../../assets/Photo.png");
 
 export const EditProfileScreen = () => {
-	const db = SQLite.openDatabase("MainDB");
+	const db = SQLite.openDatabase("db.db");
+	const { currentEmail } = useContext(AppContext);
 	const [name, setName] = useState("");
-	const [email, setEmail] = useState("");
+	const [email, setEmail] = useState(currentEmail);
 	const [phone, setPhone] = useState("");
 	const [position, setPosition] = useState("");
 	const [skype, setSkype] = useState("");
 	const [image, setImage] = useState("");
+
 	const navigation = useNavigation<NavigationProp<AppStackParams>>();
 
 	const toLogInScreen = useCallback(() => {
@@ -60,10 +63,10 @@ export const EditProfileScreen = () => {
 		try {
 			db.transaction((tx) => {
 				tx.executeSql(
-					"SELECT name, phone, email, position, skype FROM Users",
-					[],
+					"SELECT * FROM Users WHERE email = ?",
+					[currentEmail],
 					(tx, results) => {
-						let len = results.rows.length;
+						const len = results.rows.length;
 						if (len > 0) {
 							let userName = results.rows.item(0).name;
 							let userPhone = results.rows.item(0).phone;
@@ -75,6 +78,8 @@ export const EditProfileScreen = () => {
 							setEmail(userEmail);
 							setPosition(userPosition);
 							setSkype(userSkype);
+						} else {
+							alert("No user found");
 						}
 					}
 				);
@@ -90,11 +95,13 @@ export const EditProfileScreen = () => {
 				tx.executeSql(
 					"UPDATE Users SET name=?, phone=?, email=?, position=?, skype=? ",
 					[name, phone, email, position, skype],
-					() => {
-						Alert.alert(
-							"Success!",
-							"Your profile has been updated."
-						);
+					(tx, results) => {
+						if (results.rowsAffected > 0) {
+							Alert.alert(
+								"Success!",
+								"Your profile has been updated."
+							);
+						} else alert("Updation Failed");
 					}
 				);
 			});
@@ -103,22 +110,21 @@ export const EditProfileScreen = () => {
 		}
 	};
 
-	const { handleChange, handleSubmit, values, isValid, errors, touched } =
-		useFormik({
-			validationSchema: ValidationSchema,
-			initialValues: {
-				name: name || "",
-				email: email || "",
-				phone: phone || "",
-				position: position || "",
-				skype: skype || "",
-			},
-			validateOnBlur: true,
-			validateOnChange: true,
-			onSubmit: () => {
-				updateData();
-			},
-		});
+	const { handleChange, handleSubmit, values, errors, touched } = useFormik({
+		validationSchema: ValidationSchema,
+		initialValues: {
+			name: name || "",
+			email: email || "",
+			phone: phone || "",
+			position: position || "",
+			skype: skype || "",
+		},
+		validateOnBlur: true,
+		validateOnChange: true,
+		onSubmit: () => {
+			updateData();
+		},
+	});
 
 	const hasErrorEmail = touched.email && !!errors.email;
 	const hasErrorPhone = touched.phone && !!errors.phone;
@@ -128,41 +134,40 @@ export const EditProfileScreen = () => {
 		<AppLayout withHeader={false}>
 			<TouchableOpacity onPress={toLogInScreen}>
 				<Text style={editProfileScreenStyles.logOutBtn}>Log out</Text>
-				<Text style={editProfileScreenStyles.screenTitle}>
-					Edit profile
-				</Text>
-
-				<TouchableWithoutFeedback
-					onPress={() => Keyboard.dismiss()}
-					accessible={false}
-				>
-					<View style={editProfileScreenStyles.avatarRow}>
-						<TouchableOpacity
-							onPress={pickImage}
-							style={editProfileScreenStyles.avatarRow}
-						>
-							{image ? (
-								<Image
-									source={{ uri: image }}
-									style={editProfileScreenStyles.avatar}
-								/>
-							) : (
-								<Image
-									source={avatarPlaceholder}
-									style={editProfileScreenStyles.avatar}
-								/>
-							)}
-							<EditPhotoIcon
-								style={editProfileScreenStyles.editPhotoIcon}
-							/>
-						</TouchableOpacity>
-					</View>
-				</TouchableWithoutFeedback>
-				<Text style={editProfileScreenStyles.userName}>{name}</Text>
-				<Text style={editProfileScreenStyles.userPosition}>
-					{position}
-				</Text>
 			</TouchableOpacity>
+			<Text style={editProfileScreenStyles.screenTitle}>
+				Edit profile
+			</Text>
+
+			<TouchableWithoutFeedback
+				onPress={() => Keyboard.dismiss()}
+				accessible={false}
+			>
+				<View style={editProfileScreenStyles.avatarRow}>
+					<TouchableOpacity
+						onPress={pickImage}
+						style={editProfileScreenStyles.avatarRow}
+					>
+						{image ? (
+							<Image
+								source={{ uri: image }}
+								style={editProfileScreenStyles.avatar}
+							/>
+						) : (
+							<Image
+								source={avatarPlaceholder}
+								style={editProfileScreenStyles.avatar}
+							/>
+						)}
+						<EditPhotoIcon
+							style={editProfileScreenStyles.editPhotoIcon}
+						/>
+					</TouchableOpacity>
+				</View>
+			</TouchableWithoutFeedback>
+			<Text style={editProfileScreenStyles.userName}>{name}</Text>
+			<Text style={editProfileScreenStyles.userPosition}>{position}</Text>
+
 			<ScrollView>
 				<TouchableWithoutFeedback
 					onPress={() => Keyboard.dismiss()}
@@ -227,7 +232,7 @@ export const EditProfileScreen = () => {
 					</View>
 				</TouchableWithoutFeedback>
 			</ScrollView>
-			<BigBottomButton disabled={!isValid} onPress={() => handleSubmit()}>
+			<BigBottomButton onPress={() => handleSubmit()}>
 				Save
 			</BigBottomButton>
 		</AppLayout>

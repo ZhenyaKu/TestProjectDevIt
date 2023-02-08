@@ -1,6 +1,7 @@
 import React, {
 	useCallback,
 	useContext,
+	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -25,14 +26,15 @@ import { ValidationSchema } from "./validationSchema";
 import { formatPhoneNumber } from "./formatPhoneNumber";
 import { signUpScreenStyles } from "./styles";
 import { TextInput } from "../../components/TextInput";
+import { AppContext } from "../../components/AppContext";
 
 export const SignUpScreen = () => {
-	const db = SQLite.openDatabase("MainDB");
-	const [phone, setPhone] = useState("");
+	const db = SQLite.openDatabase("db.db");
 	const [formattedPhone, setFormattedPhone] = useState("");
 	const [showValidationError, setShowValidationError] = useState(false);
 	const phoneInput = useRef<PhoneInput>(null);
 	const navigation = useNavigation<NavigationProp<AppStackParams>>();
+	const { setCurrentEmail } = useContext(AppContext);
 
 	const toEditProfileScreen = useCallback(() => {
 		navigation.navigate(AppRouteNames.EditProfileScreen);
@@ -41,53 +43,45 @@ export const SignUpScreen = () => {
 		navigation.navigate(AppRouteNames.LogInScreen);
 	}, [navigation]);
 
-	const createProfile = ({ name, email, password, formattedPhone }: any) => {
+	const createProfile = ({ name, email, password, phone }: any) => {
 		db.transaction((tx) => {
 			tx.executeSql(
 				"INSERT INTO Users (name, email, password, phone) VALUES (?,?,?,?)",
 
-				[name, email, password, formattedPhone]
+				[name, email, password, phone]
 			);
-			// tx.executeSql("SELECT * from Users", [], (_: any, { rows }: any) =>
-			// 	console.log(JSON.stringify(rows))
-			// );
+			tx.executeSql("SELECT * from Users", [], (_: any, { rows }: any) =>
+				console.log(JSON.stringify(rows))
+			);
 		});
 		toEditProfileScreen();
 	};
 
-	const {
-		handleChange,
-		handleSubmit,
-		handleBlur,
-		values,
-		isValid,
-		errors,
-		touched,
-	} = useFormik({
-		validationSchema: ValidationSchema,
-		initialValues: {
-			name: "",
-			email: "",
-			password: "",
-			confirmPassword: "",
-			code: "",
-		},
-		validateOnBlur: true,
-		validateOnChange: true,
-		onSubmit: ({ name, email, password }) => {
-			const checkValid =
-				phoneInput.current?.isValidNumber(formattedPhone);
-			setShowValidationError(!checkValid || false);
+	const { handleChange, handleSubmit, handleBlur, values, errors, touched } =
+		useFormik({
+			validationSchema: ValidationSchema,
+			initialValues: {
+				name: "",
+				email: "",
+				password: "",
+				confirmPassword: "",
+				code: "",
+				phone: "",
+			},
+			validateOnBlur: true,
+			validateOnChange: true,
+			onSubmit: ({ name, email, password, phone }) => {
+				// const checkValid =
+				// 	phoneInput.current?.isValidNumber(formattedPhone);
+				// setShowValidationError(!checkValid || false);
+				// console.log(!!checkValid);
 
-			if (checkValid) {
-				createProfile({ name, email, password });
-			}
-		},
-	});
-
-	const isInvalidPhone = !phoneInput.current?.isValidNumber(phone);
-
-	const isDisabled = useMemo(() => isInvalidPhone, [isInvalidPhone]);
+				// if (checkValid) {
+				setCurrentEmail(email);
+				createProfile({ name, email, password, phone });
+				// }
+			},
+		});
 
 	const hasErrorEmail = touched.email && !!errors.email;
 	const hasErrorPassword = touched.password && !!errors.password;
@@ -95,7 +89,8 @@ export const SignUpScreen = () => {
 		touched.confirmPassword && !!errors.confirmPassword;
 	const hasErrorName = touched.name && !!errors.name;
 	const hasErrorCode = touched.code && !!errors.code;
-
+	const hasErrorPhone = touched.phone && !!errors.phone;
+	console.log(JSON.stringify(errors, null, 2));
 	return (
 		<ScrollView>
 			<AppLayout title="Sign Up To woorkroom">
@@ -111,26 +106,24 @@ export const SignUpScreen = () => {
 
 							<PhoneInput
 								ref={phoneInput}
-								value={phone}
+								value={values.phone}
 								layout="second"
 								textInputProps={{
-									value: phone,
+									value: values.phone,
 									maxLength: 12,
 								}}
 								defaultCode="US"
-								onChangeText={(text) => {
-									setPhone(formatPhoneNumber(text));
-								}}
+								onChangeText={handleChange("phone")}
 								onChangeFormattedText={(text) => {
 									setFormattedPhone(formatPhoneNumber(text));
 								}}
-								autoFocus
+								autoFocus={true}
 								containerStyle={
 									signUpScreenStyles.phoneInputContainer
 								}
 								textContainerStyle={[
 									signUpScreenStyles.textContainer,
-									showValidationError
+									showValidationError || hasErrorPhone
 										? signUpScreenStyles.textContainerError
 										: signUpScreenStyles.textContainerStyle,
 								]}
@@ -149,8 +142,7 @@ export const SignUpScreen = () => {
 							setValue={handleChange("code")}
 							textInputProps={{
 								onBlur: handleBlur("code"),
-								autoFocus: true,
-								onEndEditing: () => console.log(values.code),
+								autoFocus: false,
 							}}
 							touchableOpacityStyle={
 								hasErrorCode
@@ -158,7 +150,6 @@ export const SignUpScreen = () => {
 									: {}
 							}
 						/>
-
 						<TextInput
 							title="Your name"
 							placeholder="Enter your name"
@@ -171,7 +162,6 @@ export const SignUpScreen = () => {
 							hasError={hasErrorName}
 							autoCapitalize="none"
 						/>
-
 						<TextInput
 							title="Your Email"
 							placeholder="Enter your email"
@@ -185,7 +175,6 @@ export const SignUpScreen = () => {
 							autoCapitalize="none"
 							keyboardType="email-address"
 						/>
-
 						<TextInput
 							title="Password"
 							isPassword
@@ -216,10 +205,7 @@ export const SignUpScreen = () => {
 					</View>
 				</TouchableWithoutFeedback>
 
-				<BigBottomButton
-					disabled={!isValid || isDisabled}
-					onPress={() => handleSubmit()}
-				>
+				<BigBottomButton onPress={() => handleSubmit()}>
 					Next
 				</BigBottomButton>
 				<TextLinkButton

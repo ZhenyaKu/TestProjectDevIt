@@ -11,6 +11,7 @@ export const editProfileScreenStyles = StyleSheet.create({
 		right: normalize(1),
 	},
 	screenTitle: {
+		fontFamily: "Poppins-Medium",
 		fontSize: 18,
 		lineHeight: 27,
 		color: "#1F1D1D",

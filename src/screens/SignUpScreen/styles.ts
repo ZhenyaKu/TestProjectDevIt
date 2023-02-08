@@ -33,6 +33,7 @@ export const signUpScreenStyles = StyleSheet.create({
 	},
 	textContainerError: {
 		borderColor: "red",
+		paddingLeft: normalize(15),
 	},
 	textInputStyle: {
 		fontFamily: "Poppins-Medium",
@@ -48,7 +49,7 @@ export const signUpScreenStyles = StyleSheet.create({
 		borderWidth: normalize(1),
 		borderColor: "#D7D7D7",
 		borderRadius: 15,
-		width: normalize(70),
+		width: normalize(72),
 	},
 	inputError: {
 		borderColor: "red",
