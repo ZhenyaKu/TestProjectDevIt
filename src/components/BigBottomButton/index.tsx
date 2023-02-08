@@ -15,7 +15,10 @@ export const BigBottomButton = ({
 }: PropsWithChildren<IProps>) => {
 	return (
 		<TouchableOpacity
-			style={bigBottomButtonStyles.conteinerBtn}
+			style={[
+				bigBottomButtonStyles.conteinerBtn,
+				props.disabled && { backgroundColor: "#D7D7D7" },
+			]}
 			onPress={isDisable ? () => {} : onPress}
 			{...props}
 		>

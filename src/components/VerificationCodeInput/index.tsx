@@ -40,7 +40,7 @@ export const VerificationCodeInput: React.FC<VerificationCodeInputProps> = ({
 
 	return (
 		<View style={verificationCodeInputStyles.container}>
-			{title && (
+			{!!title && (
 				<Text style={verificationCodeInputStyles.title}>{title}</Text>
 			)}
 			<CodeField

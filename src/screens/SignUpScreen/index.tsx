@@ -1,10 +1,4 @@
-import React, {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
 	View,
 	TouchableWithoutFeedback,
@@ -28,7 +22,6 @@ import { TextInput } from "../../components/TextInput";
 
 export const SignUpScreen = () => {
 	const db = SQLite.openDatabase("MainDB");
-	const [email, setEmail] = useState("");
 	const [phone, setPhone] = useState("");
 	const [formattedPhone, setFormattedPhone] = useState("");
 	const [showValidationError, setShowValidationError] = useState(false);
@@ -42,32 +35,12 @@ export const SignUpScreen = () => {
 		navigation.navigate(AppRouteNames.LogInScreen);
 	}, [navigation]);
 
-	useEffect(() => {
-		getData();
-	}, []);
-
-	const getData = () => {
-		try {
-			db.transaction((tx) => {
-				tx.executeSql("SELECT Email FROM Users", [], (tx, results) => {
-					let len = results.rows.length;
-					if (len > 0) {
-						let userEmail = results.rows.item(0).Email;
-						setEmail(userEmail);
-					}
-				});
-			});
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
-	const createProfile = ({ name, email, password, phone }: any) => {
+	const createProfile = ({ name, email, password, formattedPhone }: any) => {
 		db.transaction((tx) => {
 			tx.executeSql(
-				"INSERT INTO Users (Name, Email, Password, Phone) VALUES (?,?,?,?)",
+				"INSERT INTO Users (name, email, password, phone) VALUES (?,?,?,?)",
 
-				[name, email, password, phone]
+				[name, email, password, formattedPhone]
 			);
 			tx.executeSql("SELECT * from Users", [], (_: any, { rows }: any) =>
 				console.log(JSON.stringify(rows))
@@ -88,7 +61,7 @@ export const SignUpScreen = () => {
 		validationSchema: ValidationSchema,
 		initialValues: {
 			name: "",
-			email: email || "",
+			email: "",
 			password: "",
 			confirmPassword: "",
 			code: "",
@@ -101,7 +74,7 @@ export const SignUpScreen = () => {
 			setShowValidationError(!checkValid || false);
 
 			if (checkValid) {
-				createProfile({ name, email, password, phone });
+				createProfile({ name, email, password, formattedPhone });
 			}
 		},
 	});
@@ -134,7 +107,7 @@ export const SignUpScreen = () => {
 								ref={phoneInput}
 								value={phone}
 								layout="second"
-								textInputProps={{ value: phone, maxLength: 13 }}
+								textInputProps={{ value: phone, maxLength: 12 }}
 								defaultCode="US"
 								onChangeText={(text) => {
 									setPhone(formatPhoneNumber(text));

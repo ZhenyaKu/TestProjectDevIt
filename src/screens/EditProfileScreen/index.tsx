@@ -60,16 +60,16 @@ export const EditProfileScreen = () => {
 		try {
 			db.transaction((tx) => {
 				tx.executeSql(
-					"SELECT Name, Phone, Email, Position, Skype FROM Users",
+					"SELECT name, phone, email, position, skype FROM Users",
 					[],
 					(tx, results) => {
 						let len = results.rows.length;
 						if (len > 0) {
-							let userName = results.rows.item(0).Name;
-							let userPhone = results.rows.item(0).Phone;
-							let userEmail = results.rows.item(0).Email;
-							let userPosition = results.rows.item(0).Position;
-							let userSkype = results.rows.item(0).Skype;
+							let userName = results.rows.item(0).name;
+							let userPhone = results.rows.item(0).phone;
+							let userEmail = results.rows.item(0).email;
+							let userPosition = results.rows.item(0).position;
+							let userSkype = results.rows.item(0).skype;
 							setName(userName);
 							setPhone(userPhone);
 							setEmail(userEmail);
@@ -88,7 +88,7 @@ export const EditProfileScreen = () => {
 		try {
 			db.transaction((tx) => {
 				tx.executeSql(
-					"UPDATE Users SET Name=?, Phone=?, Email=?, Position=?, Skype=? ",
+					"UPDATE Users SET name=?, phone=?, email=?, position=?, skype=? ",
 					[name, phone, email, position, skype],
 					() => {
 						Alert.alert(
@@ -141,16 +141,17 @@ export const EditProfileScreen = () => {
 							onPress={pickImage}
 							style={editProfileScreenStyles.avatarRow}
 						>
-							{image && (
+							{image ? (
 								<Image
 									source={{ uri: image }}
 									style={editProfileScreenStyles.avatar}
 								/>
+							) : (
+								<Image
+									source={avatarPlaceholder}
+									style={editProfileScreenStyles.avatar}
+								/>
 							)}
-							{/* <Image
-								source={avatarPlaceholder}
-								style={editProfileScreenStyles.avatar}
-							/> */}
 							<EditPhotoIcon
 								style={editProfileScreenStyles.editPhotoIcon}
 							/>

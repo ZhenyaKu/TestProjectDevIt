@@ -8,6 +8,7 @@ import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SignUpScreen } from "./src/screens/SignUpScreen";
 import { EditProfileScreen } from "./src/screens/EditProfileScreen";
+import { AppContextProvider } from "./src/components/AppContext";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,24 +30,30 @@ export default function App() {
 
 	return (
 		<SafeAreaProvider onLayout={onLayoutRootView}>
-			<StatusBar style="auto" />
-			<NavigationContainer theme={MyTheme}>
-				<Stack.Navigator
-					screenOptions={{
-						headerShown: false,
-					}}
-				>
-					<Stack.Screen name="LogInScreen" component={LoginScreen} />
-					<Stack.Screen
-						name="SignUpScreen"
-						component={SignUpScreen}
-					/>
-					<Stack.Screen
-						name="EditProfileScreen"
-						component={EditProfileScreen}
-					/>
-				</Stack.Navigator>
-			</NavigationContainer>
+			<AppContextProvider>
+				<StatusBar style="auto" />
+				<NavigationContainer theme={MyTheme}>
+					<Stack.Navigator
+						screenOptions={{
+							headerShown: false,
+						}}
+						initialRouteName="LogInScreen"
+					>
+						<Stack.Screen
+							name="LogInScreen"
+							component={LoginScreen}
+						/>
+						<Stack.Screen
+							name="SignUpScreen"
+							component={SignUpScreen}
+						/>
+						<Stack.Screen
+							name="EditProfileScreen"
+							component={EditProfileScreen}
+						/>
+					</Stack.Navigator>
+				</NavigationContainer>
+			</AppContextProvider>
 		</SafeAreaProvider>
 	);
 }

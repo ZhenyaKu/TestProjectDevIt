@@ -18,5 +18,5 @@ export const ValidationSchema = Yup.object().shape({
 	confirmPassword: Yup.string()
 		.oneOf([Yup.ref("password")], "Passwords must match")
 		.required("Password is required"),
-	code: Yup.string().trim().required().min(4),
+	code: Yup.number().required().min(4),
 });

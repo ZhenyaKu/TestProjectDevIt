@@ -5,7 +5,6 @@ import {
 	Keyboard,
 	Text,
 	TouchableOpacity,
-	Platform,
 	Alert,
 } from "react-native";
 import { useFormik } from "formik";
@@ -23,37 +22,25 @@ export const LoginScreen = () => {
 	const db = SQLite.openDatabase("MainDB");
 	const navigation = useNavigation<NavigationProp<AppStackParams>>();
 
+	const toSignUpScreen = useCallback(() => {
+		navigation.navigate(AppRouteNames.SignUpScreen);
+	}, [navigation]);
+	const toEditProfileScreen = useCallback(() => {
+		navigation.navigate(AppRouteNames.EditProfileScreen);
+	}, [navigation]);
+
 	useEffect(() => {
 		createTable();
-		getData();
 	}, []);
 
 	const createTable = () => {
-		db.transaction((tx: any) => {
+		db.transaction((tx) => {
 			tx.executeSql(
 				"CREATE TABLE IF NOT EXISTS " +
 					"Users " +
-					"(ID INTEGER PRIMARY KEY AUTOINCREMENT, Email VARCHAR, Password VARCHAR, Phone VARCHAR, Position VARCHAR, Skype VARCHAR)"
+					"(ID INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, email VARCHAR, password VARCHAR, phone VARCHAR, position VARCHAR, skype VARCHAR)"
 			);
 		});
-	};
-	const getData = () => {
-		try {
-			db.transaction((tx) => {
-				tx.executeSql(
-					"SELECT Email, Password FROM Users",
-					[],
-					(tx, results) => {
-						let len = results.rows.length;
-						if (len > 0) {
-							toSignUpScreen();
-						}
-					}
-				);
-			});
-		} catch (error) {
-			console.log(error);
-		}
 	};
 
 	const { handleChange, handleSubmit, values, isValid, errors, touched } =
@@ -64,27 +51,29 @@ export const LoginScreen = () => {
 				password: "",
 			},
 			onSubmit: async ({ email, password }) => {
-				if (email.length == 0 || password.length == 0) {
-					Alert.alert("Warning!", "Please write your data.");
-				} else {
-					try {
-						await db.transaction(async (tx) => {
-							await tx.executeSql(
-								"INSERT INTO Users (Email, Password) VALUES (?,?)",
-								[email, password]
-							);
-						});
-						navigation.navigate(AppRouteNames.EditProfileScreen);
-					} catch (error) {
-						console.log(error);
-					}
+				try {
+					db.transaction((tx) => {
+						tx.executeSql(
+							"SELECT * FROM Users WHERE email = $1 AND password = $2",
+							[email, password],
+							(tx, results) => {
+								let len = results.rows.length;
+								if (len > 0) {
+									toEditProfileScreen();
+								} else {
+									Alert.alert(
+										"User does not exist!",
+										"Please,create account."
+									);
+								}
+							}
+						);
+					});
+				} catch (error) {
+					console.log(error);
 				}
 			},
 		});
-
-	const toSignUpScreen = useCallback(() => {
-		navigation.navigate(AppRouteNames.SignUpScreen);
-	}, [navigation]);
 
 	const hasErrorEmail = touched.email && !!errors.email;
 	const hasErrorPassword = touched.password && !!errors.password;
@@ -127,7 +116,7 @@ export const LoginScreen = () => {
 			</TouchableWithoutFeedback>
 			<TouchableOpacity
 				onPress={() =>
-					Alert.alert("Warning!", "Please, check your email?!")
+					Alert.alert("Info", "Please, check your email?!")
 				}
 			>
 				<Text style={logInScreenStyles.forgotPasswordBtn}>
