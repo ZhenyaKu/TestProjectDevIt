@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import normalize from "react-native-normalize";
 
 export const textLinkButtonStyles = StyleSheet.create({
@@ -6,6 +6,7 @@ export const textLinkButtonStyles = StyleSheet.create({
 		flexDirection: "row",
 		alignSelf: "center",
 		marginTop: normalize(35),
+		marginBottom: Platform.OS === "android" ? 30 : 0,
 	},
 	description: {
 		fontFamily: "Poppins-Regular",
