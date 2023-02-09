@@ -1,16 +1,12 @@
 import { StatusBar } from "expo-status-bar";
-import { LoginScreen } from "./src/screens/LogInScreen";
 import React, { useCallback } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { SignUpScreen } from "./src/screens/SignUpScreen";
-import { EditProfileScreen } from "./src/screens/EditProfileScreen";
-import { AppContextProvider } from "./src/components/AppContext";
-
-const Stack = createNativeStackNavigator();
+import { UserContextProvider } from "./src/context/UserContext";
+import { DBContextProvider } from "./src/context/DBContext";
+import { MainStack } from "./src/navigators/main-stack";
 
 export default function App() {
 	const [fontsLoaded] = useFonts({
@@ -30,30 +26,14 @@ export default function App() {
 
 	return (
 		<SafeAreaProvider onLayout={onLayoutRootView}>
-			<AppContextProvider>
-				<StatusBar style="auto" />
-				<NavigationContainer theme={MyTheme}>
-					<Stack.Navigator
-						screenOptions={{
-							headerShown: false,
-						}}
-						initialRouteName="LogInScreen"
-					>
-						<Stack.Screen
-							name="LogInScreen"
-							component={LoginScreen}
-						/>
-						<Stack.Screen
-							name="SignUpScreen"
-							component={SignUpScreen}
-						/>
-						<Stack.Screen
-							name="EditProfileScreen"
-							component={EditProfileScreen}
-						/>
-					</Stack.Navigator>
-				</NavigationContainer>
-			</AppContextProvider>
+			<DBContextProvider>
+				<UserContextProvider>
+					<StatusBar style="auto" />
+					<NavigationContainer theme={MyTheme}>
+						<MainStack />
+					</NavigationContainer>
+				</UserContextProvider>
+			</DBContextProvider>
 		</SafeAreaProvider>
 	);
 }
